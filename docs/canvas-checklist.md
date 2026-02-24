@@ -13,24 +13,6 @@ Use como **resumo visual final** da trilha e como **checklist** que o aluno leva
 
 Resumo visual em blocos. Preencha ou use como guia de discussão.
 
-### Visão geral do fluxo (referência)
-
-O diagrama resume o **fluxo** que sustenta um roadmap: contexto e diagnóstico alimentam a identificação de riscos e capacidades; o roadmap em fases mitiga riscos e constrói capacidades; critérios de revisão devolvem o ciclo ao contexto quando o cenário mudar.
-
-```mermaid
-flowchart LR
-    A[Contexto<br/>negócio + sistema]
-    B[Diagnóstico<br/>técnico]
-    C[Riscos +<br/>Capacidades]
-    D[Roadmap<br/>em fases]
-    E[Critérios<br/>de revisão]
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E -.->|revisar quando<br/>gatilhos dispararem| A
-```
-
 | Bloco | Conteúdo (exemplos) |
 |-------|----------------------|
 | **Contexto do Negócio** | Estágio do produto, crescimento esperado, criticidade, regulatório |

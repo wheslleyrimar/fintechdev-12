@@ -102,20 +102,6 @@ Liste **capacidades** que a organização precisa ter (ex.: observabilidade padr
 
 ## 5. Roadmap em Fases
 
-O diagrama abaixo ilustra a ideia de **evolução incremental**: três janelas de tempo (curto, médio, longo prazo), cada uma com foco, decisões e riscos mitigados. A seta tracejada indica que o roadmap é **revisável** quando os critérios de revisão forem atingidos.
-
-```mermaid
-gantt
-    title Roadmap em fases (exemplo de 12 meses)
-    dateFormat  YYYY-MM
-    section Curto (0-3m)
-    Foco: observabilidade, SLO inicial     :a1, 2025-01, 3m
-    section Médio (3-6m)
-    Foco: deploy frequente, padrões        :a2, 2025-04, 3m
-    section Longo (6-12m)
-    Foco: resiliência, custo, evolução    :a3, 2025-07, 6m
-```
-
 ### Curto prazo (0–3 meses)
 
 | Item | Descrição |

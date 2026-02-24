@@ -57,35 +57,6 @@ Quando alguém pergunta “qual é a arquitetura do sistema?”, muitas vezes es
 
 Pense em arquitetura como a **história de uma cidade**: não é só o mapa atual (ruas, prédios). É entender por que certos bairros cresceram de um jeito, por que há um rio no meio, por que a estação de trem está onde está. Essa história explica o presente e informa o que é viável evoluir (demolir tudo e refazer costuma ser pior que evoluir bairro a bairro).
 
-### Diagrama: Estado vs trajetória
-
-O diagrama abaixo contrasta a visão de arquitetura como **estado** (instantâneo) com a visão como **trajetória** (decisões ao longo do tempo sob restrições). Cada nó é um “estado” do sistema; as setas são decisões tomadas sob restrições (tempo, pessoas, dinheiro, regulatório). A trajetória define a qualidade e a sustentabilidade; o estado sozinho não explica “por que estamos aqui” nem “para onde podemos ir”.
-
-```mermaid
-flowchart LR
-    subgraph Estado["Visão como ESTADO (instantâneo)"]
-        E1[("Monólito")]
-        E2[("Serviços")]
-        E1 -.->|"só descreve 'o que é'"| E2
-    end
-
-    subgraph Trajetoria["Visão como TRAJETÓRIA (decisões no tempo)"]
-        T0[Contexto t0<br/>2 times, MVP]
-        T1[Decisão 1<br/>Monólito modular]
-        T2[Contexto t1<br/>5x usuários, 4 times]
-        T3[Decisão 2<br/>Extrair módulo X]
-        T4[Revisão<br/>Premissas ainda valem?]
-        T0 -->|restrições: tempo, $, pessoas| T1
-        T1 --> T2
-        T2 -->|sinal: deploy conflituoso| T3
-        T3 --> T4
-        T4 -->|sim| T3
-        T4 -->|não| T0
-    end
-```
-
-**Leitura:** Na trajetória, cada decisão (T1, T3) é tomada sob **contexto** (T0, T2) e **restrições**. A seta de **revisão** (T4) indica que as premissas devem ser reavaliadas; se não valerem mais, o contexto é repensado (volta a T0).
-
 ### O que fazer com isso
 
 - **Documentar decisões** (ADRs, contexto, “por que” na época).
@@ -124,38 +95,6 @@ A intenção costuma ser boa (evitar dívida, “fazer direito”). O efeito é 
 - Discussões longas sobre “qual message broker usar” quando o problema imediato é “não sabemos onde está o gargalo” (falta observabilidade).
 - Resistência a “fazer no monólito” com o argumento “mas depois vamos ter que migrar” — quando “depois” pode ser em anos e o contexto pode mudar.
 
-### Diagrama: Ciclo vicioso do “estado final”
-
-Buscar “arquitetura final” desencadeia um ciclo: mais tempo desenhando, menos feedback real; menos feedback, mais suposição; mais suposição, mais overengineering e atraso. O diagrama mostra as **consequências** em cadeia e como elas retroalimentam o problema.
-
-```mermaid
-flowchart TB
-    A["“Desenhar arquitetura final”<br/>antes de codar"]
-    B[Overengineering]
-    C[Atraso de entrega]
-    D[Aumento de risco]
-    E[Baixa aprendizagem]
-    F[Pouco feedback real]
-    G[Decisões em suposição]
-
-    A --> B
-    A --> C
-    A --> D
-    A --> E
-    B --> C
-    C --> F
-    F --> G
-    G --> A
-
-    style A fill:#ffcccc
-    style B fill:#ffddcc
-    style C fill:#ffddcc
-    style D fill:#ffddcc
-    style E fill:#ffddcc
-```
-
-**Leitura:** A decisão inicial (A) gera quatro consequências diretas. Atraso e overengineering reduzem o feedback real (F); com pouco feedback, as próximas decisões continuam baseadas em suposição (G), reforçando o ciclo. **Sair do ciclo** exige: decidir para o contexto atual, evoluir em passos pequenos e documentar o “por que”.
-
 ### O que fazer em vez disso
 
 - **Decidir para o contexto atual** com critérios explícitos de revisão (ex.: “reavaliar quando o time dobrar ou o deploy semanal virar gargalo”).
@@ -189,33 +128,6 @@ Netflix, Uber, Nubank etc. têm **contexto** diferente do seu: orçamento, taman
 - Complexidade que você não precisa ainda (ex.: multi-region quando seu problema é deploy lento).
 - Tecnologias que sua equipe não domina (curva de aprendizado alta, risco operacional).
 - Custo e operação acima do que o negócio justifica.
-
-### Diagrama: Contexto como entrada da decisão arquitetural
-
-As variáveis de **contexto** (estágio do produto, time, regulatório, demanda, tolerância a falhas) são **entradas** que moldam as decisões. O diagrama mostra que não existe “uma” decisão certa; a decisão correta é a que **se adapta** ao conjunto de entradas do momento.
-
-```mermaid
-flowchart LR
-    subgraph Contexto["Variáveis de contexto"]
-        V1[Estágio do produto<br/>MVP / crescimento / escala]
-        V2[Tamanho e senioridade<br/>do time]
-        V3[Criticidade regulatória<br/>LGPD, BACEN, PCI]
-        V4[Previsibilidade<br/>de demanda]
-        V5[Tolerância a falhas<br/>pagamento vs notificação]
-    end
-
-    subgraph Decisoes["Decisões arquiteturais (exemplos)"]
-        D1[Monólito vs serviços]
-        D2[Síncrono vs assíncrono]
-        D3[Nível de resiliência]
-        D4[Investimento em<br/>observabilidade]
-    end
-
-    Contexto --> Decisoes
-    Decisoes --> Resultado["Arquitetura adequada<br/>ao momento"]
-```
-
-**Leitura:** Cada variável (V1–V5) influencia as decisões (D1–D4). Ex.: alto regulatório (V3) exige mais controles e observabilidade (D4); time pequeno (V2) tende a favorecer monólito ou poucos serviços (D1). **Copiar arquitetura** sem considerar essas entradas ignora o contexto e gera desenho inadequado.
 
 ### Como aplicar
 
@@ -267,40 +179,6 @@ Quando o **contexto** muda de forma que o monólito atrapalha:
 
 Nesse momento, **evoluir** (extrair um serviço, introduzir eventos) faz sentido. Antes disso, evoluir “por precaução” costuma ser dívida antecipada.
 
-### Diagrama: Monólito bem modularizado vs mal modularizado
-
-No **monólito bem projetado**, os módulos têm boundaries claros e dependências explícitas (setas em uma direção ou através de interfaces). No **mal modularizado**, o acoplamento é difuso (módulos se “fuçam” internamente). A evolução (extrair um módulo para serviço) só é viável quando há fronteira clara; caso contrário, vira big rewrite.
-
-```mermaid
-flowchart TB
-    subgraph Bom["Monólito BEM modularizado"]
-        direction TB
-        B1[API / BFF]
-        B2[Módulo Pagamentos]
-        B3[Módulo Usuários]
-        B4[Módulo Notificações]
-        B5[(DB)]
-        B1 --> B2
-        B1 --> B3
-        B2 --> B5
-        B3 --> B5
-        B4 --> B5
-        B2 -.->|"interface explícita"| B4
-    end
-
-    subgraph Mal["Monólito MAL modularizado"]
-        direction TB
-        M1[Camada A]
-        M2[Camada B]
-        M3[Camada C]
-        M1 <--> M2
-        M2 <--> M3
-        M1 <--> M3
-    end
-```
-
-**Leitura:** À esquerda, dependências são claras; um módulo pode ser extraído (ex.: Notificações → serviço) sem arrastar o resto. À direita, acoplamento bidirecional e difuso torna extração arriscada — qualquer mudança pode quebrar várias partes.
-
 ### Mensagem didática
 
 Monólito **bem** projetado é **alavanca**, não dívida. Ele pode evoluir para formas mais distribuídas quando o contexto justificar — extraindo módulos para serviços, introduzindo filas ou eventos — **sem** reescrever tudo. A dívida surge quando o monólito é mal modularizado ou quando insistimos em mantê-lo quando o contexto já pede evolução.
@@ -334,34 +212,6 @@ São indícios **mensuráveis ou observáveis** no dia a dia, não opinião vaga
 - **Migrar por hype** — “Todo mundo está fazendo microsserviços / event-driven.” Hype não é sinal técnico. A pergunta é: **qual problema nosso** isso resolve?
 - **Migrar por medo** — “Vamos ficar para trás.” Medo gera decisões prematuras. A pergunta é: **qual risco ou custo concreto** estamos mitigando?
 - **Migrar cedo demais** — Antes de ter observabilidade (saber onde está o gargalo), antes de ter sinais de que deploy ou domínio estão travando. Resultado: mais complexidade sem benefício proporcional.
-
-### Diagrama: Sinais para evoluir vs critérios que NÃO usar
-
-O fluxo abaixo separa **sinais técnicos reais** (que justificam evolução) de **critérios errados** (hype, medo). A decisão “evoluir ou não” deve ser guiada pelos sinais; quando os sinais não estão presentes, evoluir tende a “cobrar juros”.
-
-```mermaid
-flowchart TB
-    subgraph SinaisReais["Sinais técnicos reais"]
-        S1[Conflitos frequentes<br/>de deploy]
-        S2[Domínio crescendo<br/>demais para 1 bounded context]
-        S3[Gargalos localizados<br/>escalar só uma parte]
-        S4[Times se bloqueando<br/>por acoplamento]
-    end
-
-    subgraph CriteriosErrados["Critérios que NÃO usar"]
-        E1[Migrar por hype<br/>“todo mundo faz”]
-        E2[Migrar por medo<br/>“ficar para trás”]
-        E3[Evoluir cedo demais<br/>sem observabilidade]
-    end
-
-    SinaisReais --> Decidir{"Evoluir?"}
-    CriteriosErrados --> Nao[Evitar evolução<br/>prematura]
-    Decidir -->|Sinais presentes| Sim[Evoluir com<br/>critério e fases]
-    Decidir -->|Sinais ausentes| Nao
-    Nao --> Juros["“Juros”: mais complexidade<br/>e custo sem benefício"]
-```
-
-**Leitura:** Quando S1–S4 aparecem (mensuráveis ou observáveis no dia a dia), a pergunta “evoluir?” pode ser respondida com “sim”, com plano incremental. Quando a motivação é E1–E3, o resultado tende a ser evolução prematura e “juros” (custo operacional e cognitivo sem retorno).
 
 ### Consequência de evoluir antes do tempo
 
@@ -401,40 +251,6 @@ A forma como os componentes do sistema **se comunicam** define comportamento, cu
 - **Efeito:** **Risco e custo** aumentam: mais pontos de falha, mais latência (se síncrono, a latência é a soma ou o pior caso), mais consumo de rede e compute por request. Em cenários extremos (ex.: frontend chamando 10 APIs por tela), custo e fragilidade disparam.
 - **Decisão arquitetural:** BFF ou orquestrador **reduzem** fan-out no cliente (1 request do cliente → 1 request ao BFF → BFF fala com N backends e devolve 1 resposta). Ainda há fan-out interno, mas controlado e com retry/timeout centralizados.
 
-### Diagrama: Síncrono, assíncrono e fan-out
-
-**Comunicação síncrona:** o chamador espera a resposta; latência total = soma dos hops; falha em um propaga. **Assíncrona:** produtor envia e não espera; consumidor processa quando puder; desacoplamento no tempo, em troca de eventual consistência. **Fan-out:** 1 request gera N chamadas — sem BFF, o cliente faz N requests; com BFF, 1 request do cliente vira 1 ao BFF, que orquestra N backends e devolve 1 resposta (fan-out interno controlado).
-
-```mermaid
-sequenceDiagram
-    participant C as Cliente
-    participant BFF as BFF/Orquestrador
-    participant A as Serviço A
-    participant B as Serviço B
-    participant Q as Fila/Event Bus
-
-    Note over C,B: Cenário 1: SÍNCRONO + fan-out (sem BFF = N requests do cliente)
-    C->>A: request 1
-    C->>B: request 2
-    A-->>C: response (bloqueia até voltar)
-    B-->>C: response (bloqueia até voltar)
-
-    Note over C,Q: Cenário 2: COM BFF — 1 request, BFF faz fan-out interno
-    C->>BFF: 1 request
-    BFF->>A: chamada síncrona
-    BFF->>B: chamada síncrona
-    A-->>BFF: response
-    B-->>BFF: response
-    BFF-->>C: 1 response agregada
-
-    Note over BFF,Q: Cenário 3: ASSÍNCRONO — produtor não espera
-    BFF->>Q: publica evento
-    Q->>A: entrega (quando puder)
-    Q->>B: entrega (quando puder)
-```
-
-**Leitura:** Sem BFF, o cliente sofre a latência de todas as chamadas (e pode fazer retries duplicados). Com BFF, fan-out fica interno; retry e timeout são centralizados. Eventos (Cenário 3) desacoplam no tempo: BFF não espera A e B; consistência passa a ser eventual.
-
 ### Resumo didático
 
 - **Síncrono** → acoplamento temporal; use quando a resposta é necessária na hora.
@@ -473,36 +289,6 @@ Com observabilidade:
 
 Só depois de **enxergar** o sistema faz sentido decidir “onde” evoluir (qual módulo extrair, onde colocar cache, onde introduzir eventos).
 
-### Diagrama: Três pilares da observabilidade e impacto nas decisões
-
-Observabilidade repousa em **métricas**, **logs** e **traces**. O diagrama mostra como cada pilar responde perguntas diferentes e como a ausência deles leva a decisões baseadas em opinião, enquanto a presença permite decisões orientadas a dados e evolução segura.
-
-```mermaid
-flowchart TB
-    subgraph Pilares["Três pilares"]
-        M[Métricas<br/>latência, erro, throughput]
-        L[Logs<br/>estruturados, request_id]
-        T[Traces<br/>propagação do request]
-    end
-
-    subgraph SemObs["Sem observabilidade"]
-        O1[Tuning é chute]
-        O2[SRE não existe]
-        O3[Roadmap por opinião]
-    end
-
-    subgraph ComObs["Com observabilidade"]
-        D1[Gargalos reais aparecem]
-        D2[Decisões orientadas a dados]
-        D3[Evolução segura<br/>baseline antes/depois]
-    end
-
-    Pilares --> ComObs
-    SemObs -.->|"falta de"| Pilares
-```
-
-**Leitura:** Métricas respondem “quanto?”, “onde está lento?”; logs respondem “o que aconteceu?” (erro, contexto); traces respondem “por onde passou o request?”. Sem os três, o caminho “Sem observabilidade” leva a O1–O3. Com eles, o caminho “Com observabilidade” permite D1–D3 e evolução segura.
-
 **Frase-chave:** *“Não se evolui o que não se enxerga.”*
 
 ---
@@ -528,30 +314,6 @@ Segurança não é uma **fase** do projeto (“fase 2: segurança”) nem uma **
 
 - **Quem pode fazer o quê** — Acesso a produção, a dados, a configurações; revisão de código e de mudanças críticas.
 - **Auditoria e compliance** — Logs de acesso, mudanças em dados sensíveis, evidências para regulador.
-
-### Diagrama: Segurança como fundação (não fase)
-
-Segurança não é “fase 2” do projeto; é um conjunto de **fundações** que devem estar presentes desde o desenho. O diagrama mostra três pilares: **identidade** (quem acessa), **proteção de dados** (classificação, criptografia, ciclo de vida) e **governança** (quem pode o quê, auditoria). Adicionar depois exige retrabalho em todos os fluxos que assumiram “rede confiável” ou “vamos tratar dado depois”.
-
-```mermaid
-flowchart TB
-    subgraph Fundacao["Segurança como fundação (desde o desenho)"]
-        I[Identidade<br/>OAuth/OIDC, mTLS, RBAC]
-        P[Proteção de dados<br/>classificação, criptografia, lifecycle]
-        G[Governança<br/>acesso, auditoria, compliance]
-    end
-
-    subgraph Erro["Erro: segurança como fase"]
-        F1[Fase 1: fazer funcionar]
-        F2[Fase 2: adicionar segurança]
-        F1 --> F2
-        F2 -.->|"retrabalho: redesign,<br/>refatoração de logs, integrações"| Fundacao
-    end
-
-    Fundacao --> Sistema[Sistema seguro<br/>por desenho]
-```
-
-**Leitura:** À esquerda, os três pilares fazem parte do desenho desde o início. À direita, o anti-pattern “segurança depois” leva a Fase 2 com retrabalho (seta tracejada): redesign de fluxos, refatoração para não vazar dado em log, integrações que assumiam rede confiável.
 
 ### Erro comum: adicionar segurança depois
 
@@ -584,39 +346,6 @@ Confiabilidade é o sistema se comportar como esperado **na maior parte do tempo
 - **Fallback** — Resposta degradada (ex.: cache antigo, “tente mais tarde”) em vez de erro bruto.
 - **Degradação graceful** — Desligar funções não críticas para manter o núcleo crítico (ex.: desligar recomendações para manter checkout).
 
-### Diagrama: SLO, error budget e resiliência (circuit breaker)
-
-**SLO** define o compromisso (ex.: 99,9% disponibilidade). O **error budget** é a margem aceitável de falha (0,1%); quando consumido, prioridade vira estabilidade. **Circuit breaker** protege a cadeia: após N falhas, o circuito “abre” e o chamador não chama mais o dependente por um tempo (fallback ou erro rápido), evitando cascata e timeout em massa.
-
-```mermaid
-stateDiagram-v2
-    [*] --> Closed: inicial
-    Closed --> Open: falhas >= threshold
-    Open --> HalfOpen: após timeout (retry)
-    HalfOpen --> Closed: sucesso
-    HalfOpen --> Open: nova falha
-
-    note right of Closed: Chamadas passam<br/>normalmente
-    note right of Open: Fallback ou erro rápido<br/>sem chamar dependente
-    note right of HalfOpen: Teste 1 request<br/>para ver se recuperou
-```
-
-```mermaid
-flowchart LR
-    subgraph SLO["SLO e Error Budget"]
-        A[SLO: 99.9% uptime]
-        B[Error budget: 0.1%]
-        C[Budget consumido?]
-        D[Priorizar estabilidade]
-        A --> B
-        B --> C
-        C -->|sim| D
-        C -->|não| E[Continuar entregas]
-    end
-```
-
-**Leitura:** O state diagram mostra os estados do circuit breaker (Closed → Open → HalfOpen → Closed). O flowchart mostra que o error budget, quando estourado, dispara priorização de estabilidade (menos features, mais correções e resiliência).
-
 ### Arquitetura madura em confiabilidade
 
 - **Assume** que falha vai acontecer (não “não vai falhar”).
@@ -644,37 +373,6 @@ Performance não é “um endpoint rápido” isolado. É uma **propriedade do f
 - **Percentis (p95, p99, p999)** mostram a cauda. Em escala, 1% de usuários pode ser milhares; SLO costuma ser definido em percentil (ex.: p99 menor que 500ms).
 - **Mensagem:** Medir e definir SLO em percentis, não só média.
 
-### Diagrama: Latência composta e caminho crítico
-
-Em uma cadeia **síncrona**, a latência que o usuário sente é a **soma** das latências de cada hop (ou pior, com retries). O diagrama mostra o caminho do request e onde cada milissegundo é gasto; a **cauda** (p99, p999) importa mais que a média, pois 1% dos requests pode ser milhares de usuários.
-
-```mermaid
-flowchart LR
-    subgraph Caminho["Caminho do request (síncrono)"]
-        direction LR
-        CL[Cliente]
-        BFF[BFF<br/>+20ms]
-        SVC1[Serviço A<br/>+50ms]
-        SVC2[Serviço B<br/>+80ms]
-        DB[(DB<br/>+30ms)]
-        CL --> BFF
-        BFF --> SVC1
-        SVC1 --> SVC2
-        SVC2 --> DB
-        DB --> SVC2
-        SVC2 --> SVC1
-        SVC1 --> BFF
-        BFF --> CL
-    end
-
-    subgraph Latencia["Latência total (exemplo)"]
-        L1["Total ≈ 20+50+80+30 (+ ida/volta) = caminho crítico"]
-        L2["Cada hop adiciona; reduzir só um pode não bastar"]
-    end
-```
-
-**Leitura:** BFF + Serviço A + Serviço B + DB formam o **caminho crítico**. Adicionar um hop (ex.: novo middleware, novo serviço) adiciona latência. Para SLO de performance, medir **percentis** (p95, p99), não só média; gargalos podem mudar com a carga (100 vs 10.000 usuários).
-
 ### Gargalos mudam com carga
 
 - Com 100 usuários, o gargalo pode ser o banco; com 10.000, pode ser a rede, o connection pool ou um terceiro. **Testes de carga** e observabilidade contínua mostram onde está o gargalo **no seu** cenário.
@@ -696,42 +394,6 @@ A **fatura** de cloud (e de ferramentas) reflete **como** o sistema foi desenhad
 - **Retry em excesso** → mesma falha gera N tentativas → mais compute e mais carga no dependente → custo e risco.
 - **Overprovision** → recurso ocioso (instâncias, storage) → custo fixo alto.
 - **Dado sem lifecycle** → storage e backup crescendo → custo sobe.
-
-### Diagrama: Decisões arquiteturais → custo (feedback)
-
-A **fatura** reflete decisões de desenho: fan-out (mais chamadas por request), retry em excesso, overprovision, dado sem lifecycle. O diagrama mostra o **fluxo causal**: decisão arquitetural → comportamento do sistema → consumo de recurso → custo. Custo alto em um lugar **sinaliza** onde revisar o desenho.
-
-```mermaid
-flowchart LR
-    subgraph Decisoes["Decisões arquiteturais"]
-        D1[Fan-out alto<br/>1 req → N chamadas]
-        D2[Retry agressivo<br/>sem backoff]
-        D3[Overprovision<br/>mínimo alto, sem limite]
-        D4[Dado sem lifecycle<br/>retenção infinita]
-    end
-
-    subgraph Efeito["Efeito no consumo"]
-        E1[+ compute, + rede<br/>por request]
-        E2[+ chamadas por falha<br/>cascata de carga]
-        E3[Recurso ocioso<br/>instâncias fixas]
-        E4[+ storage, + backup<br/>crescimento contínuo]
-    end
-
-    subgraph Custo["Custo (feedback)"]
-        C[Fatura sobe<br/>“log financeiro”]
-    end
-
-    D1 --> E1
-    D2 --> E2
-    D3 --> E3
-    D4 --> E4
-    E1 --> C
-    E2 --> C
-    E3 --> C
-    E4 --> C
-```
-
-**Leitura:** Cada decisão (D1–D4) gera um padrão de consumo (E1–E4) que aparece na fatura (C). **Observabilidade de custo** (tagging por serviço, custo por request) permite atribuir a fatura ao desenho e priorizar onde refatorar ou evoluir.
 
 ### Como usar na prática
 
@@ -830,35 +492,6 @@ flowchart LR
 - **Autonomia organizacional** (cada squad dono de um fluxo) tende a exigir **autonomia técnica** (ownership de um ou mais serviços, decisões locais dentro de limites). Se a organização quer times autônomos mas o sistema é um monólito único com deploy único, há fricção.
 - **Reorganizar só a empresa** (mudar squads) sem tocar no código, ou **reorganizar só o código** (quebrar serviços) sem considerar como os times se comunicam, costuma gerar **atrito**: “Quem é dono desse serviço?”, “Por que esse time me bloqueia?”.
 
-### Diagrama: Lei de Conway — organização espelha sistema
-
-A **estrutura de comunicação** da organização (quem fala com quem, quais times existem, como as decisões são tomadas) tende a se **refletir** na estrutura do sistema (módulos, serviços, APIs). Times acoplados → sistemas acoplados; autonomia organizacional desejada → necessidade de autonomia técnica (ownership de serviços, boundaries claros).
-
-```mermaid
-flowchart TB
-    subgraph Org["Estrutura da organização"]
-        T1[Time Pagamentos]
-        T2[Time Usuários]
-        T3[Time Notificações]
-        T1 <--> T2
-        T2 <--> T3
-        T1 <--> T3
-    end
-
-    subgraph Sys["Estrutura do sistema (espelho)"]
-        S1[Serviço/Módulo<br/>Pagamentos]
-        S2[Serviço/Módulo<br/>Usuários]
-        S3[Serviço/Módulo<br/>Notificações]
-        S1 <--> S2
-        S2 <--> S3
-        S1 <--> S3
-    end
-
-    Org -->|"Conway: espelha"| Sys
-```
-
-**Leitura:** Se três times compartilham o mesmo repositório e as mesmas reuniões (acoplamento organizacional), o sistema tende a ter módulos que se chamam o tempo todo (acoplamento técnico). Se a organização quer squads autônomos por domínio, o desenho do sistema (ownership por serviço, APIs estáveis) deve permitir que cada squad entregue sem depender do outro no dia a dia. **Reorganizar só a empresa** ou **só o código**, sem o outro, gera fricção.
-
 ### Implicação para roadmap
 
 Quando você desenha **evolução arquitetural** (extrair serviços, definir bounded contexts), considere **como os times estão organizados**. Desenhar algo que a organização não consegue operar (ex.: um serviço que cruza três squads sem dono claro) gera conflito e dívida de processo.
@@ -885,34 +518,6 @@ Quando você desenha **evolução arquitetural** (extrair serviços, definir bou
 6. **É performático** — Latência e cauda sob controle; SLO de performance definido.
 7. **É eficiente** — Custo alinhado ao valor; sem desperdício estrutural óbvio.
 8. **É sustentável** — Padrões, documentação viva, evolução contínua; conhecimento não está só na cabeça de poucos.
-
-### Diagrama: Camadas de maturidade e dependências
-
-As camadas formam uma **pilha**: cada nível depende dos anteriores. Pular uma camada (ex.: querer “ser performático” ou “eficiente” sem ser observável) gera decisões no escuro. O diagrama mostra a ordem sugerida e a ideia de que **cada camada habilita** a seguinte.
-
-```mermaid
-flowchart TB
-    subgraph Camadas["Maturidade arquitetural (ordem)"]
-        L1[1. Funciona<br/>entrega valor, está no ar]
-        L2[2. Escala<br/>suporta crescimento]
-        L3[3. Observável<br/>métricas, logs, traces]
-        L4[4. Seguro<br/>identidade, dados, governança]
-        L5[5. Confiável<br/>SLO, error budget, resiliência]
-        L6[6. Performático<br/>latência e cauda sob controle]
-        L7[7. Eficiente<br/>custo alinhado ao valor]
-        L8[8. Sustentável<br/>padrões, doc viva, evolução]
-    end
-
-    L1 --> L2
-    L2 --> L3
-    L3 --> L4
-    L4 --> L5
-    L5 --> L6
-    L6 --> L7
-    L7 --> L8
-```
-
-**Leitura:** Não dá para definir SLO (5) sem métricas (3); não dá para otimizar custo (7) sem saber onde o custo está (observabilidade + tagging). Tentar “estar no 8” (padrões, documentação) sem 1–4 sólidos gera processos em cima de base frágil (sistema que não escala ou não é observável).
 
 ### Por que a ordem importa
 
@@ -959,29 +564,6 @@ Um bom roadmap responde: **“Por que agora?”** e **“O que estamos deixando 
 
 6. **Evoluir incrementalmente** — Fases curtas (ex.: 0–3, 3–6, 6–12 meses), com entregas e revisão. Não “ano 1: migração completa”.
 
-### Diagrama: Fluxo de construção do roadmap sustentável
-
-O roadmap **começa** com diagnóstico e objetivos de negócio; só então vêm gargalos, riscos, priorização e evolução incremental. Pular o primeiro passo (diagnóstico) transforma o roadmap em **palpite**.
-
-```mermaid
-flowchart LR
-    A[1. Diagnóstico honesto<br/>maturidade, custo, risco]
-    B[2. Objetivos de negócio<br/>crescimento, regulatório]
-    C[3. Gargalos reais<br/>dados, incidentes, dia a dia]
-    D[4. Riscos técnicos<br/>impacto × probabilidade]
-    E[5. Priorizar impacto<br/>mais risco/capacidade<br/>menos esforço]
-    F[6. Evoluir incrementalmente<br/>fases curtas, revisão]
-
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F -.->|"revisar quando<br/>critérios dispararem"| A
-```
-
-**Leitura:** Cada etapa alimenta a próxima. O laço tracejado (F → A) indica que o roadmap é **revisável**: quando os critérios de revisão disparam (crescimento, custo, incidentes, mudança regulatória), volta-se ao diagnóstico e ao contexto. Roadmap **não** é lista de tecnologias nem plano fechado de 2 anos; é estratégia (mitigação de riscos, capacidades, alinhamento com negócio).
-
 ### Erro comum
 
 Pular o diagnóstico e ir direto para “vamos fazer X” (ex.: “vamos para microsserviços”). Trabalho desconectado do contexto e dos dados.
@@ -1008,29 +590,6 @@ Toda decisão técnica **troca** algo por algo: mais de um atributo implica meno
 - **Revisão** — Quando o contexto muda (ex.: Y passou a ser inaceitável), sabemos que a decisão deve ser revisitada.
 - **Evitar conflito** — Decisões implícitas geram “não sabíamos que íamos abrir mão de X”; trade-off explícito reduz surpresa.
 
-### Diagrama: Trade-offs clássicos e decisão madura
-
-Toda decisão técnica **troca** algo por algo. O diagrama resume três eixos clássicos (velocidade vs estabilidade, custo vs confiabilidade, simplicidade vs escala) e o fluxo de uma **decisão madura**: escolha explícita (X), o que se abre mão (Y) e gatilho de revisão (Z).
-
-```mermaid
-flowchart TB
-    subgraph Eixos["Eixos de trade-off (não há 'canto grátis')"]
-        E1[Velocidade ↔ Estabilidade<br/>entregar rápido vs mais testes/revisão]
-        E2[Custo ↔ Confiabilidade<br/>mais réplicas/regiões vs mais $]
-        E3[Simplicidade ↔ Escala<br/>monólito vs distribuir]
-    end
-
-    subgraph Decisao["Decisão madura"]
-        D1[Escolhemos X]
-        D2[Em troca aceitamos Y]
-        D3[Revisitaremos quando Z]
-    end
-
-    Eixos --> Decisao
-```
-
-**Leitura:** Mais velocidade com mais estabilidade tende a custar mais (processo, ferramentas, pessoas). Uma **decisão madura** declara a escolha (X), o que se abre mão (Y) e o gatilho de revisão (Z). Exemplo em ADR ou template: “Aceitamos deploy semanal por mais 6 meses em troca de priorizar observabilidade; revisitaremos quando o deploy virar gargalo ou o time dobrar.”
-
 ### Como fazer na prática
 
 - Em **ADRs** (Architecture Decision Records): além da decisão, escrever “em troca, aceitamos…” e “revisitaremos quando…”.
@@ -1051,37 +610,6 @@ Resumo didático dos anti-patterns já citados, para fixação:
 | **Modismo tecnológico** | Adotar tecnologia porque “está na moda” ou “é o futuro”. | Sem problema claro a resolver; curva de aprendizado e risco sem ROI definido. |
 | **Roadmap rígido** | Plano de 2 anos fechado, sem revisão ante mudança. | Contexto muda (time, negócio, regulatório); plano vira obsoleto e vira ritual inútil. |
 | **Decisões não documentadas** | “A gente sempre fez assim”; conhecimento só na cabeça de poucos. | Bus factor 1; onboarding difícil; decisões repetidas ou contraditórias ao longo do tempo. |
-
-### Diagrama: Anti-patterns e consequências em cadeia
-
-Cada anti-pattern leva a consequências que, em muitos casos, **reforçam** o problema (ex.: big rewrite atrasa → contexto muda → requisitos mudam → rewrite fica mais longo). O diagrama resume os cinco anti-patterns e seus efeitos típicos.
-
-```mermaid
-flowchart TB
-    subgraph AntiPatterns["Anti-patterns"]
-        AP1[Big rewrite]
-        AP2[Copiar big tech]
-        AP3[Modismo tecnológico]
-        AP4[Roadmap rígido]
-        AP5[Decisões não documentadas]
-    end
-
-    subgraph Consequencias["Consequências"]
-        C1[Alto risco, longo prazo<br/>contexto muda no meio]
-        C2[Complexidade e custo<br/>sem benefício proporcional]
-        C3[Curva de aprendizado<br/>sem problema claro]
-        C4[Plano obsoleto<br/>ritual inútil]
-        C5[Bus factor 1<br/>onboarding difícil]
-    end
-
-    AP1 --> C1
-    AP2 --> C2
-    AP3 --> C3
-    AP4 --> C4
-    AP5 --> C5
-```
-
-**Leitura:** Evitar esses cinco já é metade do caminho para uma jornada sustentável. Em vez de big rewrite: evoluir incrementalmente. Em vez de copiar: adaptar ao contexto. Em vez de modismo: tecnologia quando há problema claro. Em vez de roadmap rígido: critérios de revisão. Em vez de “só na cabeça”: ADRs e documentação viva.
 
 **Frase-chave:** *“Hype não paga dívida técnica.”*
 
